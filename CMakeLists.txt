@@ -39,6 +39,7 @@ endif()
 
 add_executable(ThermoElasticity main_ThermoElasticity.C)
 add_executable(HeatEquation main_HeatEquation.C)
+list(APPEND CHECK_SOURCES main_HeatEquation.C main_ThermoElasticity.C)
 
 target_link_libraries(ThermoElasticity ThermoElastic Elasticity
                                        IFEMAppCommon ${IFEM_LIBRARIES})
