@@ -103,6 +103,17 @@ public:
   virtual bool evalBou(LocalIntegral& elmInt, const FiniteElement& fe,
                        const Vec3& X, const Vec3& normal) const;
 
+  using IntegrandBase::finalizeElement;
+  virtual bool finalizeElement(LocalIntegral&);
+
+  //! \brief Evaluates the secondary solution at a result point.
+  //! \param[out] s The solution field values at current point
+  //! \param[in] elmVec Element-level primary solution vectors
+  //! \param[in] fe Finite element data at current point
+  //! \param[in] X Cartesian coordinates of current point
+  virtual bool evalSol2(Vector& s, const Vectors& elmVec,
+                        const FiniteElement& fe, const Vec3& X) const;
+
   //! \brief Advance time stepping scheme.
   void advanceStep() { bdf.advanceStep(); }
 

@@ -22,10 +22,13 @@
 #include "ForceIntegrator.h"
 #include "Property.h"
 #include "ASMstruct.h"
+#include "AlgEqSystem.h"
 #include "AnaSol.h"
 #include "DataExporter.h"
 #include "Functions.h"
 #include "Profiler.h"
+#include "SAM.h"
+#include "SystemMatrix.h"
 #include "TimeStep.h"
 #include "Utilities.h"
 #include "IFEM.h"
@@ -393,6 +396,11 @@ public:
     return true;
   }
 
+  void setDiscreteLoad(const std::vector<double>* vec)
+  {
+    discreteLoad = vec;
+  }
+
 protected:
   //! \brief Performs some pre-processing tasks on the FE model.
   //! \details This method is reimplemented to ensure that threading groups are
@@ -444,6 +452,24 @@ protected:
           Dim::myInts.insert(std::make_pair(p.pindx,&wdc));
   }
 
+  bool assembleDiscreteTerms(const IntegrandBase*, const TimeDomain&) override
+  {
+    if (!discreteLoad)
+      return true;
+
+    if (discreteLoad->size() != this->getNoDOFs())
+      return false;
+
+    SystemVector* v = Dim::myEqSys->getVector(0);
+    for (size_t i = 1; i <= this->getNoDOFs(); ++i) {
+      int eq = Dim::mySam->getEquation(i, 1);
+      if (eq != 0)
+        v->getPtr()[eq-1] += (*discreteLoad)[i-1];
+    }
+
+    return true;
+  }
+
 private:
   Integrand                   heq;  //!< Main integrand
   typename Integrand::WeakDirichlet wdc; //!< Weak dirichlet integrand
@@ -454,6 +480,7 @@ private:
 
   std::vector<BoundaryFlux> fluxes;  //!< Heat fluxes to calculate
   std::vector<BoundaryFlux> senergy; //!< Stored energies to calculate
+  const std::vector<double>* discreteLoad = nullptr; //!< Additional discrete load vector (used with CoSTA)
 };
 
 

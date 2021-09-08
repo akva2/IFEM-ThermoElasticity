@@ -79,6 +79,13 @@ bool HeatEquation::evalBou (LocalIntegral& elmInt,
 }
 
 
+bool HeatEquation::evalSol2 (Vector& s, const Vectors& elmVec,
+                             const FiniteElement& fe, const Vec3& X) const
+{
+  return fe.dNdX.multiply(elmVec.front(),s,true);
+}
+
+
 std::string HeatEquation::getField1Name (size_t, const char* prefix) const
 {
   if (!prefix)
@@ -155,6 +162,16 @@ ForceBase* HeatEquation::getForceIntegrand (const Vec3*, AnaSol*) const
 NormBase* HeatEquation::getNormIntegrand (AnaSol* asol) const
 {
   return new HeatEquationNorm(*const_cast<HeatEquation*>(this),asol);
+}
+
+bool HeatEquation::finalizeElement (LocalIntegral &elmInt)
+{
+  if (m_mode == SIM::RHS_ONLY) {
+    ElmMats& A = static_cast<ElmMats&>(elmInt);
+    A.A[0].multiply(A.vec[0], A.b[0], -1.0, 1.0);
+  }
+
+  return true;
 }
 
 
